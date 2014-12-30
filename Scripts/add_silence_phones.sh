@@ -5,9 +5,9 @@ PHONE_LIST="Dictionary/phones.list"
 TMP_DICT="Dictionary/tmp.dict"
 
 # Add silence in the word dict
-echo "SENT-END      []   sil" >> $PHONES_DICT
-echo "SENT-START    [] sil" >> $PHONES_DICT
-echo "SIL           []  sil" >> $PHONES_DICT
+echo "sent-end  []  sil" >> $PHONES_DICT
+echo "sent-start  []  sil" >> $PHONES_DICT
+echo "sil  []  sil" >> $PHONES_DICT
 
 # Sort the updated dict
 sort $PHONES_DICT >> $TMP_DICT
