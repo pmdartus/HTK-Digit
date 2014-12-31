@@ -86,12 +86,33 @@ data_prep() {
 #           TRAINNING
 #================================
 
+generate_hmmdefs() {
+  for item in `cat $PHONE_LIST`
+  do
+    (tail -n +4  Models/hmm0/prototype | sed 's/prototype/'$item'/g') >> Models/hmm0/hmmdefs
+  done
+}
+
+generate_macros() {
+  echo "~o" > Models/hmm0/macros
+  echo "<STREAMINFO> 1 39" >> Models/hmm0/macros
+  echo "<VECSIZE> 39<NULLD><MFCC_D_A_0><DIAGC>" >> Models/hmm0/macros
+  cat Models/hmm0/vFloors >> Models/hmm0/macros
+}
+
 train() {
   echo "TRAINNING"
   echo "    >> Init"
   mkdir Models/hmm0
   create_mapping HCompV "./Data/Lab/train/*"
   HCompV -C Configs/HCompV.config -f 0.01 -m -S Mappings/HCompV.mapping -M Models/hmm0 Models/prototype
+  generate_hmmdefs
+  generate_macros
+
+  echo "    >> Estimate"
+  mkdir Models/hmm1
+  create_mapping HERest "./Data/Lab/train/*"
+  HERest -T 1 -C Configs/HERest.config -t 250.0 150.0 10000.0 -S Mappings/HERest.mapping -H Models/hmm0/macros -H Models/hmm0/hmmdefs -M Models/hmm1 Dictionary/phones.list
 }
 
 main() {

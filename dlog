@@ -1,0 +1,35 @@
+WARNING: no script file global.ded
+WARNING: no script file Dictionary/Src/dict.ded
+
+Dictionary Usage Statistics
+---------------------------
+  Dictionary    TotalWords WordsUsed  TotalProns PronsUsed
+        dict        11         11         11         11
+ phones.dict        11         11         11         11
+
+11 words required, 0 missing
+
+New Phone Usage Counts
+---------------------
+  1. ey    :     1
+  2. t     :     2
+  3. f     :     2
+  4. ay    :     2
+  5. v     :     2
+  6. ao    :     1
+  7. r     :     3
+  8. n     :     4
+  9. ow    :     2
+ 10. w     :     1
+ 11. ah    :     1
+ 12. s     :     3
+ 13. eh    :     1
+ 14. ax    :     1
+ 15. ih    :     2
+ 16. k     :     1
+ 17. th    :     1
+ 18. iy    :     1
+ 19. uw    :     1
+ 20. z     :     1
+
+Dictionary Dictionary/phones.dict created
