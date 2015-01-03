@@ -74,7 +74,7 @@ data_prep() {
   HParse Dictionary/Src/grammar Dictionary/Src/grammar.wordnet
 
   # Convert to phones
-  HLEd -d $PHONES_DICT -i Labels/train.phones.mlf Configs/HLEd.config Labels/train.nosp.mlf
+  HLEd -d $PHONES_DICT -i Labels/train.phones.mlf -l '*/Data/Lab/train' Configs/HLEd.config Labels/train.nosp.mlf
 
   echo "    >> Features extraction"
   mkdir ./Data/Lab/train

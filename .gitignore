@@ -1,0 +1,10 @@
+dlog
+.DS_Store
+.vagrant
+provision/*.tar.gz
+provision/htk
+Models/hmm*
+Mappings
+Labels/train.phones.mlf
+Dictionary/phones.*
+Data/Lab
