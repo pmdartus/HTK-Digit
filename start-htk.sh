@@ -96,6 +96,15 @@ estimate() {
        -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Dictionary/phones.list >> /dev/null
 }
 
+fix_silence_model() {
+  ITERATION=$1
+  NEXT=$(($ITERATION + 1))
+
+  echo "    >> Fix silence model $ITERATION"
+  mkdir Models/hmm$NEXT
+  HHEd -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Configs/HHEd.config Dictionary/phones.list
+}
+
 generate_hmmdefs() {
   for item in `cat $PHONE_LIST`
   do
@@ -122,6 +131,11 @@ train() {
   create_mapping HERest "./Data/Lab/train/*"
 
   for i in {0..2}
+  do
+    estimate $i
+  done
+  fix_silence_model 3
+  for i in {4..6}
   do
     estimate $i
   done
