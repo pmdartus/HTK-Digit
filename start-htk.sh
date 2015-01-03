@@ -55,8 +55,9 @@ add_silence() {
 
 generate_hcopy_mapping() {
   MODE=$1
+  mkdir $EXPORT_PATH$MODE
   DIR_PATH=$RECORDED_PATH$MODE"/*"
-  MAPPING_FILE="./Mappings/HCopy.mapping"
+  MAPPING_FILE="./Mappings/HCopy_$MODE.mapping"
   for filename in $DIR_PATH; do
     BASE_NAME=$(basename $filename)
     BASE_WITHOUT_EXT="${BASE_NAME%.*}"
@@ -77,9 +78,13 @@ data_prep() {
   HLEd -d $PHONES_DICT -i Labels/train.phones.mlf -l './Data/Lab/train' Configs/HLEd.config Labels/train.nosp.mlf
 
   echo "    >> Features extraction"
-  mkdir ./Data/Lab/train
   generate_hcopy_mapping train
-  HCopy -T 1 -C Configs/HCopy.config -S Mappings/HCopy.mapping > /dev/null
+  HCopy -T 1 -C Configs/HCopy.config -S Mappings/HCopy_train.mapping > /dev/null
+
+  echo "    >> Test preparation"
+  generate_hcopy_mapping dev
+  HCopy -T 1 -C Configs/HCopy.config -S Mappings/HCopy_dev.mapping > /dev/null
+  create_mapping HVite "./Data/Lab/dev/*"
 }
 
 #================================
@@ -90,7 +95,7 @@ estimate() {
   ITERATION=$1
   NEXT=$(($ITERATION + 1))
 
-  echo "    >> Estimate $ITERATION"
+  echo "    >> Estimate $NEXT"
   mkdir Models/hmm$NEXT
   HERest -T 1 -C Configs/HERest.config -I Labels/train.phones.mlf -t 250.0 150.0 10000.0 -S Mappings/HERest.mapping\
        -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Dictionary/phones.list >> /dev/null
@@ -100,7 +105,7 @@ fix_silence_model() {
   ITERATION=$1
   NEXT=$(($ITERATION + 1))
 
-  echo "    >> Fix silence model $ITERATION"
+  echo "    >> Fix silence model $NEXT"
   mkdir Models/hmm$NEXT
   HHEd -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Configs/HHEd.config Dictionary/phones.list
 }
@@ -141,10 +146,26 @@ train() {
   done
 }
 
+#================================
+#               TEST
+#================================
+
+testing() {
+  $ITERATION=$1
+  echo "TESTING"
+  echo "    >> With model $ITERATION"
+
+  HVite -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -S Mappings/HVite.mapping -i aligned_$ITERATION.mlf \
+      -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT $PHONE_LIST
+
+}
+
+
 main() {
   clean
   data_prep
   train
+  testing 7
 }
 
 main

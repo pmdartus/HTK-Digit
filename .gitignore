@@ -6,5 +6,6 @@ provision/htk
 Models/hmm*
 Mappings
 Labels/train.phones.mlf
+Labels/aligned_*.mlf
 Dictionary/phones.*
 Data/Lab
