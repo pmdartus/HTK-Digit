@@ -86,6 +86,16 @@ data_prep() {
 #           TRAINNING
 #================================
 
+estimate() {
+  ITERATION=$1
+  NEXT=$(($ITERATION + 1))
+
+  echo "    >> Estimate $ITERATION"
+  mkdir Models/hmm$NEXT
+  HERest -T 1 -C Configs/HERest.config -I Labels/train.phones.mlf -t 250.0 150.0 10000.0 -S Mappings/HERest.mapping\
+       -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Dictionary/phones.list >> /dev/null
+}
+
 generate_hmmdefs() {
   for item in `cat $PHONE_LIST`
   do
@@ -106,13 +116,15 @@ train() {
   mkdir Models/hmm0
   create_mapping HCompV "./Data/Lab/train/*"
   HCompV -C Configs/HCompV.config -f 0.01 -m -S Mappings/HCompV.mapping -M Models/hmm0 Models/prototype
+
   generate_hmmdefs
   generate_macros
-
-  echo "    >> Estimate"
-  mkdir Models/hmm1
   create_mapping HERest "./Data/Lab/train/*"
-  HERest -T 1 -C Configs/HERest.config -I Labels/train.phones.mlf -t 250.0 150.0 10000.0 -S Mappings/HERest.mapping -H Models/hmm0/macros -H Models/hmm0/hmmdefs -M Models/hmm1 Dictionary/phones.list
+
+  for i in {0..2}
+  do
+    estimate $i
+  done
 }
 
 main() {
