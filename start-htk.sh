@@ -39,8 +39,8 @@ clean() {
 
 add_silence() {
   # Add silence in the word dict
-  echo "sent-end  []  sil" >> $PHONES_DICT
-  echo "sent-start  []  sil" >> $PHONES_DICT
+  echo "SENT-END  []  sil" >> $PHONES_DICT
+  echo "SENT-START  []  sil" >> $PHONES_DICT
   echo "sil  []  sil" >> $PHONES_DICT
 
   # Sort the updated dict
@@ -151,11 +151,11 @@ train() {
 #================================
 
 testing() {
-  $ITERATION=$1
+  ITERATION=$1
   echo "TESTING"
   echo "    >> With model $ITERATION"
 
-  HVite -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -S Mappings/HVite.mapping -i aligned_$ITERATION.mlf \
+  HVite -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -S Mappings/HVite.mapping -i Labels/aligned_$ITERATION.mlf \
       -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT $PHONE_LIST
 
 }
