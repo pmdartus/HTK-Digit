@@ -74,7 +74,7 @@ data_prep() {
   HParse Dictionary/Src/grammar Dictionary/Src/grammar.wordnet
 
   # Convert to phones
-  HLEd -d $PHONES_DICT -i Labels/train.phones.mlf -l '*/Data/Lab/train' Configs/HLEd.config Labels/train.nosp.mlf
+  HLEd -d $PHONES_DICT -i Labels/train.phones.mlf -l './Data/Lab/train' Configs/HLEd.config Labels/train.nosp.mlf
 
   echo "    >> Features extraction"
   mkdir ./Data/Lab/train
@@ -112,7 +112,7 @@ train() {
   echo "    >> Estimate"
   mkdir Models/hmm1
   create_mapping HERest "./Data/Lab/train/*"
-  HERest -T 1 -C Configs/HERest.config -t 250.0 150.0 10000.0 -S Mappings/HERest.mapping -H Models/hmm0/macros -H Models/hmm0/hmmdefs -M Models/hmm1 Dictionary/phones.list
+  HERest -T 1 -C Configs/HERest.config -I Labels/train.phones.mlf -t 250.0 150.0 10000.0 -S Mappings/HERest.mapping -H Models/hmm0/macros -H Models/hmm0/hmmdefs -M Models/hmm1 Dictionary/phones.list
 }
 
 main() {
