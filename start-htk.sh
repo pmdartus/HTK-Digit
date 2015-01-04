@@ -66,6 +66,7 @@ data_prep() {
 
   # Convert to phones
   HLEd -d $PHONES_DICT -i Labels/train.phones.mlf -l './Data/Lab/train' Configs/HLEd.config Labels/train.nosp.mlf
+  HLEd -d $PHONES_DICT -i Labels/train.phones-with-sp.mlf -l './Data/Lab/train' Configs/HLEd-with-sp.config Labels/train.nosp.mlf
 
   echo "    >> Features extraction"
   generate_hcopy_mapping train
