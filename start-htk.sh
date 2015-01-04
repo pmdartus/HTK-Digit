@@ -52,6 +52,7 @@ data_prep() {
   echo "DATA PREP"
   echo "    >> Grammar generation"
   HDMan -m -w Dictionary/Src/word.list -n Dictionary/phones-with-sp.list -g ./Configs/global.ded -l dlog $PHONES_DICT Dictionary/Src/dict
+  echo "sil" >> Dictionary/phones-with-sp.list
   sed '/sp/d' Dictionary/phones-with-sp.list > $PHONE_LIST
   echo "sil   sil" >> $PHONES_DICT
 
@@ -127,7 +128,7 @@ align() {
 
   echo "    >> Aligning MLF"
   create_mapping HVite_align "./Data/Lab/train/*"
-  HVite -A -D -T 1 -l './Data/Lab/train' -o SWT -b sent-end -C Configs/HVite.config -H Models/hmm$IT/macros -H Models/hmm$IT/hmmdefs\
+  HVite -A -D -T 1 -l './Data/Lab/train' -o SWT -C Configs/HVite.config -H Models/hmm$IT/macros -H Models/hmm$IT/hmmdefs\
       -i Labels/aligned.mlf -m -t 250.0 150.0 1000.0 -y lab -a -I Labels/train.nosp.mlf -S Mappings/HVite_align.mapping $PHONES_DICT Dictionary/phones-with-sp.list> HVite_log
 }
 
@@ -198,7 +199,7 @@ testing() {
   echo "    >> With model $ITERATION"
 
   HVite -A -D -T 1 -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -S Mappings/HVite.mapping -i Labels/aligned_$ITERATION.mlf \
-      -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT Dictionary/phones-with-sp.list
+      -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT Dictionary/triphones.list >> /dev/null
 }
 
 #================================

@@ -1,63 +1,59 @@
 VERSION=1.0
-N=19   L=42   
-I=0    W=sent-end            
-I=1    W=sil                 
-I=2    W=!NULL               
-I=3    W=zero                
-I=4    W=oh                  
-I=5    W=nine                
-I=6    W=eight               
-I=7    W=seven               
-I=8    W=six                 
-I=9    W=five                
-I=10   W=four                
-I=11   W=three               
-I=12   W=two                 
-I=13   W=one                 
-I=14   W=sil                 
+N=17   L=40   
+I=0    W=sil                 
+I=1    W=!NULL               
+I=2    W=zero                
+I=3    W=oh                  
+I=4    W=nine                
+I=5    W=eight               
+I=6    W=seven               
+I=7    W=six                 
+I=8    W=five                
+I=9    W=four                
+I=10   W=three               
+I=11   W=two                 
+I=12   W=one                 
+I=13   W=sil                 
+I=14   W=!NULL               
 I=15   W=!NULL               
-I=16   W=sent-start          
-I=17   W=!NULL               
-I=18   W=!NULL               
-J=0     S=2    E=0    
-J=1     S=2    E=1    
-J=2     S=1    E=2    
-J=3     S=3    E=2    
-J=4     S=4    E=2    
-J=5     S=5    E=2    
-J=6     S=6    E=2    
-J=7     S=7    E=2    
-J=8     S=8    E=2    
-J=9     S=9    E=2    
-J=10    S=10   E=2    
-J=11    S=11   E=2    
-J=12    S=12   E=2    
-J=13    S=13   E=2    
-J=14    S=2    E=3    
-J=15    S=15   E=3    
-J=16    S=2    E=4    
-J=17    S=15   E=4    
-J=18    S=2    E=5    
-J=19    S=15   E=5    
-J=20    S=2    E=6    
-J=21    S=15   E=6    
-J=22    S=2    E=7    
-J=23    S=15   E=7    
-J=24    S=2    E=8    
-J=25    S=15   E=8    
-J=26    S=2    E=9    
-J=27    S=15   E=9    
-J=28    S=2    E=10   
-J=29    S=15   E=10   
-J=30    S=2    E=11   
-J=31    S=15   E=11   
-J=32    S=2    E=12   
-J=33    S=15   E=12   
-J=34    S=2    E=13   
-J=35    S=15   E=13   
-J=36    S=2    E=14   
-J=37    S=15   E=14   
-J=38    S=14   E=15   
-J=39    S=16   E=15   
-J=40    S=18   E=16   
-J=41    S=0    E=17   
+I=16   W=!NULL               
+J=0     S=1    E=0    
+J=1     S=0    E=1    
+J=2     S=2    E=1    
+J=3     S=3    E=1    
+J=4     S=4    E=1    
+J=5     S=5    E=1    
+J=6     S=6    E=1    
+J=7     S=7    E=1    
+J=8     S=8    E=1    
+J=9     S=9    E=1    
+J=10    S=10   E=1    
+J=11    S=11   E=1    
+J=12    S=12   E=1    
+J=13    S=1    E=2    
+J=14    S=14   E=2    
+J=15    S=1    E=3    
+J=16    S=14   E=3    
+J=17    S=1    E=4    
+J=18    S=14   E=4    
+J=19    S=1    E=5    
+J=20    S=14   E=5    
+J=21    S=1    E=6    
+J=22    S=14   E=6    
+J=23    S=1    E=7    
+J=24    S=14   E=7    
+J=25    S=1    E=8    
+J=26    S=14   E=8    
+J=27    S=1    E=9    
+J=28    S=14   E=9    
+J=29    S=1    E=10   
+J=30    S=14   E=10   
+J=31    S=1    E=11   
+J=32    S=14   E=11   
+J=33    S=1    E=12   
+J=34    S=14   E=12   
+J=35    S=1    E=13   
+J=36    S=14   E=13   
+J=37    S=13   E=14   
+J=38    S=16   E=14   
+J=39    S=1    E=15   
