@@ -36,28 +36,6 @@ clean() {
 #         DATA PREP
 #================================
 
-add_silence() {
-  # Add silence in the word dict
-  echo "SENT-END  []  sil" >> $PHONES_DICT
-  echo "SENT-START  []  sil" >> $PHONES_DICT
-  echo "sil  []  sil" >> $PHONES_DICT
-
-  # Sort the updated dict
-  TMP_DICT="Dictionary/tmp"
-  sort $PHONES_DICT >> $TMP_DICT
-  rm $PHONES_DICT
-  mv $TMP_DICT $PHONES_DICT
-
-  #Add silence in the list
-  echo "sil" >> $PHONE_LIST
-}
-
-create_phones_whith_sp() {
-  WITH_SP="Dictionary/phones-with-sp.list"
-  cat $PHONE_LIST >> $WITH_SP
-  echo "sp" >> $WITH_SP
-}
-
 generate_hcopy_mapping() {
   MODE=$1
   mkdir $EXPORT_PATH$MODE
@@ -73,10 +51,15 @@ generate_hcopy_mapping() {
 data_prep() {
   echo "DATA PREP"
   echo "    >> Grammar generation"
-  HDMan  -A -D -m -w Dictionary/Src/word.list -n Dictionary/phones-with-sp.list -g ./Configs/global.ded -l dlog $PHONES_DICT Dictionary/Src/dict
+  HDMan -m -w Dictionary/Src/word.list -n Dictionary/phones-with-sp.list -g ./Configs/global.ded -l dlog $PHONES_DICT Dictionary/Src/dict
   sed '/sp/d' Dictionary/phones-with-sp.list > $PHONE_LIST
-  # add_silence
-  # create_phones_whith_sp
+  echo "sil   sil" >> $PHONES_DICT
+
+  # Sort the updated dict
+  TMP_DICT="Dictionary/tmp"
+  sort $PHONES_DICT >> $TMP_DICT
+  rm $PHONES_DICT
+  mv $TMP_DICT $PHONES_DICT
 
   # Create word net
   HParse Dictionary/Src/grammar Dictionary/Src/grammar.wordnet
