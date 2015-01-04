@@ -6,8 +6,7 @@ RECORDED_PATH="./Data/Recorded/"
 EXPORT_PATH="./Data/Lab/"
 
 GRAMMAR_FILES="dlog\
-  Dictionary/phones.list\
-  Dictionary/phones.dict\
+  Dictionary/phones*\
   Dictionary/Src/*.wordnet\
   Labels/train.phones.mlf"
 
@@ -37,22 +36,6 @@ clean() {
 #         DATA PREP
 #================================
 
-add_silence() {
-  # Add silence in the word dict
-  echo "sent-end  []  sil" >> $PHONES_DICT
-  echo "sent-start  []  sil" >> $PHONES_DICT
-  echo "sil  []  sil" >> $PHONES_DICT
-
-  # Sort the updated dict
-  TMP_DICT="Dictionary/tmp"
-  sort $PHONES_DICT >> $TMP_DICT
-  rm $PHONES_DICT
-  mv $TMP_DICT $PHONES_DICT
-
-  #Add silence in the list
-  echo "sil" >> $PHONE_LIST
-}
-
 generate_hcopy_mapping() {
   MODE=$1
   mkdir $EXPORT_PATH$MODE
@@ -68,14 +51,23 @@ generate_hcopy_mapping() {
 data_prep() {
   echo "DATA PREP"
   echo "    >> Grammar generation"
-  HDMan -m -w Dictionary/Src/word.list -n $PHONE_LIST -l dlog $PHONES_DICT Dictionary/Src/dict
-  add_silence
+  HDMan -m -w Dictionary/Src/word.list -n Dictionary/phones-with-sp.list -g ./Configs/global.ded -l dlog $PHONES_DICT Dictionary/Src/dict
+  echo "sil" >> Dictionary/phones-with-sp.list
+  sed '/sp/d' Dictionary/phones-with-sp.list > $PHONE_LIST
+  echo "sil   sil" >> $PHONES_DICT
+
+  # Sort the updated dict
+  TMP_DICT="Dictionary/tmp"
+  sort $PHONES_DICT >> $TMP_DICT
+  rm $PHONES_DICT
+  mv $TMP_DICT $PHONES_DICT
 
   # Create word net
   HParse Dictionary/Src/grammar Dictionary/Src/grammar.wordnet
 
   # Convert to phones
   HLEd -d $PHONES_DICT -i Labels/train.phones.mlf -l './Data/Lab/train' Configs/HLEd.config Labels/train.nosp.mlf
+  HLEd -d $PHONES_DICT -i Labels/train.phones-with-sp.mlf -l './Data/Lab/train' Configs/HLEd-with-sp.config Labels/train.nosp.mlf
 
   echo "    >> Features extraction"
   generate_hcopy_mapping train
@@ -95,19 +87,50 @@ estimate() {
   ITERATION=$1
   NEXT=$(($ITERATION + 1))
 
+  MLF=$2
+  LIST=$3
+  CMD=$4
+
   echo "    >> Estimate $NEXT"
   mkdir Models/hmm$NEXT
-  HERest -T 1 -C Configs/HERest.config -I Labels/train.phones.mlf -t 250.0 150.0 10000.0 -S Mappings/HERest.mapping\
-       -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Dictionary/phones.list >> /dev/null
+  HERest -A -D -T 1 -C Configs/HERest.config -I Labels/$MLF -t 250.0 150.0 30000.0 $4 -S Mappings/HERest.mapping\
+       -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Dictionary/$LIST >> /dev/null
 }
 
 fix_silence_model() {
   ITERATION=$1
   NEXT=$(($ITERATION + 1))
+  NEXT_NEXT=$(($ITERATION + 2))
 
-  echo "    >> Fix silence model $NEXT"
+  echo "    >> Update model with sp $NEXT"
   mkdir Models/hmm$NEXT
-  HHEd -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Configs/HHEd.config Dictionary/phones.list
+  cp -r Models/hmm$ITERATION/* Models/hmm$NEXT
+
+  echo "~h \"sp\"" >> Models/hmm$NEXT/hmmdefs
+  echo "<BEGINHMM>" >> Models/hmm$NEXT/hmmdefs
+  echo "<NUMSTATES> 3" >> Models/hmm$NEXT/hmmdefs
+  echo "<STATE> 2" >> Models/hmm$NEXT/hmmdefs
+
+  sed -n '518,522p' < Models/hmm$NEXT/hmmdefs >> Models/hmm$NEXT/hmmdefs
+
+  echo "<TRANSP> 3" >> Models/hmm$NEXT/hmmdefs
+  echo " 0.0 1.0 0.0" >> Models/hmm$NEXT/hmmdefs
+  echo " 0.0 0.9 0.1" >> Models/hmm$NEXT/hmmdefs
+  echo " 0.0 0.0 0.0" >> Models/hmm$NEXT/hmmdefs
+  echo "<ENDHMM>" >> Models/hmm$NEXT/hmmdefs
+
+  echo "    >> Fix silence model $NEXT_NEXT"
+  mkdir Models/hmm$NEXT_NEXT
+  HHEd -H Models/hmm$NEXT/macros -H Models/hmm$NEXT/hmmdefs -M Models/hmm$NEXT_NEXT Configs/HHEd.config Dictionary/phones-with-sp.list
+}
+
+align() {
+  IT=$1
+
+  echo "    >> Aligning MLF"
+  create_mapping HVite_align "./Data/Lab/train/*"
+  HVite -A -D -T 1 -l './Data/Lab/train' -b sil -o SWT -C Configs/HVite.config -H Models/hmm$IT/macros -H Models/hmm$IT/hmmdefs\
+      -i Labels/aligned.mlf -m -t 250.0 150.0 1000.0 -y lab -a -I Labels/train.nosp.mlf -S Mappings/HVite_align.mapping $PHONES_DICT Dictionary/phones-with-sp.list> HVite_log
 }
 
 generate_hmmdefs() {
@@ -124,6 +147,42 @@ generate_macros() {
   cat Models/hmm0/vFloors >> Models/hmm0/macros
 }
 
+triphone() {
+  echo "    >> Triphones"
+  HLEd -A -D -T 1 -n Dictionary/triphones.list -l "./Data/Lab/train" -i Labels/triphones.mlf Configs/HLEd-triphone.config Labels/aligned.mlf >> /dev/null
+  perl ./HTK_scripts/maketrihed Dictionary/phones-with-sp.list Dictionary/triphones.list
+
+  mkdir Models/hmm10
+  HHEd -H Models/hmm9/macros -H Models/hmm9/hmmdefs -M Models/hmm10 mktri.hed Dictionary/phones-with-sp.list
+}
+
+make_tied_state() {
+  echo "    >> Make tied state"
+  grep -v "[bdglmpy]\|ao\|aa\|ae\|aw\|ax\|ch\|en\|er\|hh\|jh\|sh\|uh\|zh" Dictionary/Src/dict > Dictionary/Src/dict_fixed
+  HDMan -b sp -n Dictionary/fulllist.list -g Config/global.ded -l flog Dictionary/tri.dict Dictionary/Src/dict_fixed
+
+  cp Dictionary/fulllist.list Dictionary/fulllist1.list
+  cat Dictionary/triphones.list >> Dictionary/fulllist1.list
+  perl HTK_Scripts/fixfulllist Dictionary/fulllist1.list Dictionary/fulllist.list
+
+  rm Dictionary/fulllist1.list
+
+  rm Configs/tree.hed
+  cp Configs/tree.template Configs/tree.hed
+  perl HTK_Scripts/mkcls TB 350 Dictionary/phones.list >> Configs/tree.hed
+
+  echo "" >> Configs/tree.hed
+  echo "TR 1" >> Configs/tree.hed
+  echo "" >> Configs/tree.hed
+  echo "AU \"Dictionary/fulllist.list\"" >> Configs/tree.hed
+  echo "CO \"Dictionary/tiedlist.list\"" >> Configs/tree.hed
+  echo "" >> Configs/tree.hed
+  echo "ST \"trees\"" >> Configs/tree.hed
+
+  mkdir Models/hmm13
+  HHEd -H Models/hmm12/macros -H Models/hmm12/hmmdefs -M Models/hmm13 Configs/tree.hed Dictionary/triphones.list >> /dev/null
+}
+
 train() {
   echo "TRAINNING"
   echo "    >> Init"
@@ -137,27 +196,48 @@ train() {
 
   for i in {0..2}
   do
-    estimate $i
+    estimate $i train.phones.mlf phones.list
   done
   fix_silence_model 3
-  for i in {4..6}
+  for i in {5..6}
   do
-    estimate $i
+    estimate $i train.phones-with-sp.mlf phones-with-sp.list
   done
+  align 7
+  for i in {7..8}
+  do
+    estimate $i aligned.mlf phones-with-sp.list
+  done
+
+  triphone
+  estimate 10 triphones.mlf triphones.list
+  estimate 11 triphones.mlf triphones.list "-s stats"
+
+  make_tied_state
+  estimate 13 triphones.mlf tiedlist.list "-s stats"
+  estimate 14 triphones.mlf tiedlist.list "-s stats"
 }
+
 
 #================================
 #               TEST
 #================================
 
 testing() {
-  $ITERATION=$1
+  ITERATION=$1
   echo "TESTING"
   echo "    >> With model $ITERATION"
 
-  HVite -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -S Mappings/HVite.mapping -i aligned_$ITERATION.mlf \
-      -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT $PHONE_LIST
+  HVite -A -D -T 1 -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -S Mappings/HVite.mapping -i Labels/aligned_$ITERATION.mlf \
+      -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT Dictionary/tiedlist.list >> /dev/null
+}
 
+#================================
+#             EVALUATE
+#================================
+
+evaluate() {
+  HResults -f -I Labels/dev.ref.mlf Dictionary/tiedlist.list Labels/aligned_15.mlf
 }
 
 
@@ -165,7 +245,9 @@ main() {
   clean
   data_prep
   train
-  testing 7
+  testing 15
+  evaluate 15
 }
 
 main
+

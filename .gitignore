@@ -1,4 +1,9 @@
 dlog
+flog
+stats
+trees
+HVite_log
+mktri.hed
 .DS_Store
 .vagrant
 provision/*.tar.gz
@@ -6,6 +11,13 @@ provision/htk
 Models/hmm*
 Mappings
 Labels/train.phones.mlf
-Labels/aligned_*.mlf
+Labels/aligned*
+Labels/triphones.mlf
 Dictionary/phones.*
+Dictionary/triphones.list
+Dictionary/Src/dict_fixed
+Dictionary/fulllist.list
+Dictionary/tiedlist.list
+Dictionary/tri.dict
 Data/Lab
+Configs/tree.hed
