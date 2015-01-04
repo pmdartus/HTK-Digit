@@ -197,7 +197,7 @@ testing() {
   echo "TESTING"
   echo "    >> With model $ITERATION"
 
-  HVite -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -S Mappings/HVite.mapping -i Labels/aligned_$ITERATION.mlf \
+  HVite -A -D -T 1 -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -S Mappings/HVite.mapping -i Labels/aligned_$ITERATION.mlf \
       -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT Dictionary/phones-with-sp.list
 }
 
@@ -214,6 +214,8 @@ main() {
   clean
   data_prep
   train
+  testing 12
+  evaluate 12
 }
 
 main
