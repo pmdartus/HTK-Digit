@@ -1,2 +1,2 @@
 $digit = one | two | three | four | five | six | seven | eight | nine | oh | zero;
-( SENT-START ( <{sil} $digit {sil}> ) SENT-END )
+( sent-start ( <{sil} $digit {sil}> ) sent-end )

@@ -184,6 +184,8 @@ main() {
   clean
   data_prep
   train
+  testing 7
+  evaluate 7
 }
 
 main

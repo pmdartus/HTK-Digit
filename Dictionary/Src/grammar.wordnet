@@ -1,6 +1,6 @@
 VERSION=1.0
 N=19   L=42   
-I=0    W=SENT-END            
+I=0    W=sent-end            
 I=1    W=sil                 
 I=2    W=!NULL               
 I=3    W=zero                
@@ -16,7 +16,7 @@ I=12   W=two
 I=13   W=one                 
 I=14   W=sil                 
 I=15   W=!NULL               
-I=16   W=SENT-START          
+I=16   W=sent-start          
 I=17   W=!NULL               
 I=18   W=!NULL               
 J=0     S=2    E=0    
