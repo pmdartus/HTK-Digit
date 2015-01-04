@@ -214,6 +214,8 @@ train() {
   estimate 11 triphones.mlf triphones.list "-s stats"
 
   make_tied_state
+  estimate 13 triphones.mlf tiedlist.list "-s stats"
+  estimate 14 triphones.mlf tiedlist.list "-s stats"
 }
 
 
@@ -227,7 +229,7 @@ testing() {
   echo "    >> With model $ITERATION"
 
   HVite -A -D -T 1 -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -S Mappings/HVite.mapping -i Labels/aligned_$ITERATION.mlf \
-      -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT Dictionary/triphones.list >> /dev/null
+      -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT Dictionary/tiedlist.list >> /dev/null
 }
 
 #================================
@@ -235,7 +237,7 @@ testing() {
 #================================
 
 evaluate() {
-  HResults -I Labels/dev.ref.mlf Dictionary/Src/word.list Labels/aligned_$1.mlf
+  HResults -f -I Labels/dev.ref.mlf Dictionary/tiedlist.list Labels/aligned_15.mlf
 }
 
 
@@ -243,8 +245,8 @@ main() {
   clean
   data_prep
   train
-  # testing 12
-  # evaluate 12
+  testing 15
+  evaluate 15
 }
 
 main
