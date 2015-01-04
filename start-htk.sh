@@ -89,10 +89,11 @@ estimate() {
 
   MLF=$2
   LIST=$3
+  CMD=$4
 
   echo "    >> Estimate $NEXT"
   mkdir Models/hmm$NEXT
-  HERest -A -D -T 1 -C Configs/HERest.config -I Labels/$MLF -t 250.0 150.0 30000.0 -S Mappings/HERest.mapping\
+  HERest -A -D -T 1 -C Configs/HERest.config -I Labels/$MLF -t 250.0 150.0 30000.0 $4 -S Mappings/HERest.mapping\
        -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Dictionary/$LIST >> /dev/null
 }
 
@@ -128,7 +129,7 @@ align() {
 
   echo "    >> Aligning MLF"
   create_mapping HVite_align "./Data/Lab/train/*"
-  HVite -A -D -T 1 -l './Data/Lab/train' -o SWT -C Configs/HVite.config -H Models/hmm$IT/macros -H Models/hmm$IT/hmmdefs\
+  HVite -A -D -T 1 -l './Data/Lab/train' -b sil -o SWT -C Configs/HVite.config -H Models/hmm$IT/macros -H Models/hmm$IT/hmmdefs\
       -i Labels/aligned.mlf -m -t 250.0 150.0 1000.0 -y lab -a -I Labels/train.nosp.mlf -S Mappings/HVite_align.mapping $PHONES_DICT Dictionary/phones-with-sp.list> HVite_log
 }
 
@@ -153,6 +154,33 @@ triphone() {
 
   mkdir Models/hmm10
   HHEd -H Models/hmm9/macros -H Models/hmm9/hmmdefs -M Models/hmm10 mktri.hed Dictionary/phones-with-sp.list
+}
+
+make_tied_state() {
+  echo "    >> Make tied state"
+  grep -v "[bdglmpy]\|ao\|aa\|ae\|aw\|ax\|ch\|en\|er\|hh\|jh\|sh\|uh\|zh" Dictionary/Src/dict > Dictionary/Src/dict_fixed
+  HDMan -b sp -n Dictionary/fulllist.list -g Config/global.ded -l flog Dictionary/tri.dict Dictionary/Src/dict_fixed
+
+  cp Dictionary/fulllist.list Dictionary/fulllist1.list
+  cat Dictionary/triphones.list >> Dictionary/fulllist1.list
+  perl HTK_Scripts/fixfulllist Dictionary/fulllist1.list Dictionary/fulllist.list
+
+  rm Dictionary/fulllist1.list
+
+  rm Configs/tree.hed
+  cp Configs/tree.template Configs/tree.hed
+  perl HTK_Scripts/mkcls TB 350 Dictionary/phones.list >> Configs/tree.hed
+
+  echo "" >> Configs/tree.hed
+  echo "TR 1" >> Configs/tree.hed
+  echo "" >> Configs/tree.hed
+  echo "AU \"Dictionary/fulllist.list\"" >> Configs/tree.hed
+  echo "CO \"Dictionary/tiedlist.list\"" >> Configs/tree.hed
+  echo "" >> Configs/tree.hed
+  echo "ST \"trees\"" >> Configs/tree.hed
+
+  mkdir Models/hmm13
+  HHEd -H Models/hmm12/macros -H Models/hmm12/hmmdefs -M Models/hmm13 Configs/tree.hed Dictionary/triphones.list >> /dev/null
 }
 
 train() {
@@ -182,10 +210,10 @@ train() {
   done
 
   triphone
-  for i in {10..11}
-  do
-    estimate $i triphones.mlf triphones.list
-  done
+  estimate 10 triphones.mlf triphones.list
+  estimate 11 triphones.mlf triphones.list "-s stats"
+
+  make_tied_state
 }
 
 
@@ -215,8 +243,9 @@ main() {
   clean
   data_prep
   train
-  testing 12
-  evaluate 12
+  # testing 12
+  # evaluate 12
 }
 
 main
+
