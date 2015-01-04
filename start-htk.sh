@@ -145,6 +145,11 @@ generate_macros() {
   cat Models/hmm0/vFloors >> Models/hmm0/macros
 }
 
+triphone() {
+  echo "    >> Triphones"
+  HLEd -A -D -T 1 -n Dictionary/triphones.list -l "*" -i Labels/triphones.mlf Configs/HLEd-triphone.config Labels/aligned.mlf >> /dev/null
+}
+
 train() {
   echo "TRAINNING"
   echo "    >> Init"
@@ -166,7 +171,14 @@ train() {
     estimate $i train.phones-with-sp.mlf phones-with-sp.list
   done
   align 7
+  for i in {7..8}
+  do
+    estimate $i aligned.mlf phones-with-sp.list
+  done
+
+  triphone
 }
+
 
 #================================
 #               TEST
@@ -194,6 +206,7 @@ main() {
   clean
   data_prep
   train
+  triphone
 }
 
 main

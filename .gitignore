@@ -8,5 +8,7 @@ Models/hmm*
 Mappings
 Labels/train.phones.mlf
 Labels/aligned*
+Labels/triphones.mlf
 Dictionary/phones.*
+Dictionary/triphones.list
 Data/Lab
