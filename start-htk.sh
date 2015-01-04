@@ -91,7 +91,7 @@ estimate() {
 
   echo "    >> Estimate $NEXT"
   mkdir Models/hmm$NEXT
-  HERest -T 1 -C Configs/HERest.config -I Labels/$MLF -t 250.0 150.0 30000.0 -S Mappings/HERest.mapping\
+  HERest -A -D -T 1 -C Configs/HERest.config -I Labels/$MLF -t 250.0 150.0 30000.0 -S Mappings/HERest.mapping\
        -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Dictionary/$LIST >> /dev/null
 }
 
@@ -147,7 +147,11 @@ generate_macros() {
 
 triphone() {
   echo "    >> Triphones"
-  HLEd -A -D -T 1 -n Dictionary/triphones.list -l "*" -i Labels/triphones.mlf Configs/HLEd-triphone.config Labels/aligned.mlf >> /dev/null
+  HLEd -A -D -T 1 -n Dictionary/triphones.list -l "./Data/Lab/train" -i Labels/triphones.mlf Configs/HLEd-triphone.config Labels/aligned.mlf >> /dev/null
+  perl ./HTK_scripts/maketrihed Dictionary/phones-with-sp.list Dictionary/triphones.list
+
+  mkdir Models/hmm10
+  HHEd -H Models/hmm9/macros -H Models/hmm9/hmmdefs -M Models/hmm10 mktri.hed Dictionary/phones-with-sp.list
 }
 
 train() {
@@ -177,6 +181,10 @@ train() {
   done
 
   triphone
+  for i in {10..11}
+  do
+    estimate $i triphones.mlf triphones.list
+  done
 }
 
 
@@ -206,7 +214,6 @@ main() {
   clean
   data_prep
   train
-  triphone
 }
 
 main
