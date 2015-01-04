@@ -6,8 +6,7 @@ RECORDED_PATH="./Data/Recorded/"
 EXPORT_PATH="./Data/Lab/"
 
 GRAMMAR_FILES="dlog\
-  Dictionary/phones.list\
-  Dictionary/phones.dict\
+  Dictionary/phones*\
   Dictionary/Src/*.wordnet\
   Labels/train.phones.mlf"
 
@@ -53,6 +52,12 @@ add_silence() {
   echo "sil" >> $PHONE_LIST
 }
 
+create_phones_whith_sp() {
+  WITH_SP="Dictionary/phones-with-sp.list"
+  cat $PHONE_LIST >> $WITH_SP
+  echo "sp" >> $WITH_SP
+}
+
 generate_hcopy_mapping() {
   MODE=$1
   mkdir $EXPORT_PATH$MODE
@@ -68,8 +73,10 @@ generate_hcopy_mapping() {
 data_prep() {
   echo "DATA PREP"
   echo "    >> Grammar generation"
-  HDMan -m -w Dictionary/Src/word.list -n $PHONE_LIST -l dlog $PHONES_DICT Dictionary/Src/dict
-  add_silence
+  HDMan  -A -D -m -w Dictionary/Src/word.list -n Dictionary/phones-with-sp.list -g ./Configs/global.ded -l dlog $PHONES_DICT Dictionary/Src/dict
+  sed '/sp/d' Dictionary/phones-with-sp.list > $PHONE_LIST
+  # add_silence
+  # create_phones_whith_sp
 
   # Create word net
   HParse Dictionary/Src/grammar Dictionary/Src/grammar.wordnet
@@ -156,8 +163,15 @@ testing() {
   echo "    >> With model $ITERATION"
 
   HVite -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -S Mappings/HVite.mapping -i Labels/aligned_$ITERATION.mlf \
-      -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT $PHONE_LIST
+      -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT Dictionary/phones-with-sp.list
+}
 
+#================================
+#             EVALUATE
+#================================
+
+evaluate() {
+  HResults -I Labels/dev.ref.mlf Dictionary/Src/word.list Labels/aligned_$1.mlf
 }
 
 
@@ -166,6 +180,7 @@ main() {
   data_prep
   train
   testing 7
+  evaluate 7
 }
 
 main
