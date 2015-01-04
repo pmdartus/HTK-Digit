@@ -86,10 +86,13 @@ estimate() {
   ITERATION=$1
   NEXT=$(($ITERATION + 1))
 
+  MLF=$2
+  LIST=$3
+
   echo "    >> Estimate $NEXT"
   mkdir Models/hmm$NEXT
-  HERest -T 1 -C Configs/HERest.config -I Labels/train.phones.mlf -t 250.0 150.0 10000.0 -S Mappings/HERest.mapping\
-       -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Dictionary/phones.list >> /dev/null
+  HERest -T 1 -C Configs/HERest.config -I Labels/$MLF -t 250.0 150.0 10000.0 -S Mappings/HERest.mapping\
+       -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Dictionary/$LIST >> /dev/null
 }
 
 fix_silence_model() {
@@ -146,9 +149,13 @@ train() {
 
   for i in {0..2}
   do
-    estimate $i
+    estimate $i train.phones.mlf phones.list
   done
   fix_silence_model 3
+  for i in {5..6}
+  do
+    estimate $i train.phones-with-sp.mlf phones-with-sp.list
+  done
 }
 
 #================================
