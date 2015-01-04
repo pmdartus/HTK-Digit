@@ -91,7 +91,7 @@ estimate() {
 
   echo "    >> Estimate $NEXT"
   mkdir Models/hmm$NEXT
-  HERest -T 1 -C Configs/HERest.config -I Labels/$MLF -t 250.0 150.0 10000.0 -S Mappings/HERest.mapping\
+  HERest -T 1 -C Configs/HERest.config -I Labels/$MLF -t 250.0 150.0 30000.0 -S Mappings/HERest.mapping\
        -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Dictionary/$LIST >> /dev/null
 }
 
@@ -120,6 +120,15 @@ fix_silence_model() {
   echo "    >> Fix silence model $NEXT_NEXT"
   mkdir Models/hmm$NEXT_NEXT
   HHEd -H Models/hmm$NEXT/macros -H Models/hmm$NEXT/hmmdefs -M Models/hmm$NEXT_NEXT Configs/HHEd.config Dictionary/phones-with-sp.list
+}
+
+align() {
+  IT=$1
+
+  echo "    >> Aligning MLF"
+  create_mapping HVite_align "./Data/Lab/train/*"
+  HVite -A -D -T 1 -l './Data/Lab/train' -o SWT -b sent-end -C Configs/HVite.config -H Models/hmm$IT/macros -H Models/hmm$IT/hmmdefs\
+      -i Labels/aligned.mlf -m -t 250.0 150.0 1000.0 -y lab -a -I Labels/train.nosp.mlf -S Mappings/HVite_align.mapping $PHONES_DICT Dictionary/phones-with-sp.list> HVite_log
 }
 
 generate_hmmdefs() {
@@ -156,6 +165,7 @@ train() {
   do
     estimate $i train.phones-with-sp.mlf phones-with-sp.list
   done
+  align 7
 }
 
 #================================
@@ -184,8 +194,6 @@ main() {
   clean
   data_prep
   train
-  testing 7
-  evaluate 7
 }
 
 main

@@ -1,4 +1,5 @@
 dlog
+HVite_log
 .DS_Store
 .vagrant
 provision/*.tar.gz
@@ -6,6 +7,6 @@ provision/htk
 Models/hmm*
 Mappings
 Labels/train.phones.mlf
-Labels/aligned_*.mlf
+Labels/aligned*
 Dictionary/phones.*
 Data/Lab
