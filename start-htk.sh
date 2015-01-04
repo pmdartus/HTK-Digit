@@ -95,10 +95,28 @@ estimate() {
 fix_silence_model() {
   ITERATION=$1
   NEXT=$(($ITERATION + 1))
+  NEXT_NEXT=$(($ITERATION + 2))
 
-  echo "    >> Fix silence model $NEXT"
+  echo "    >> Update model with sp $NEXT"
   mkdir Models/hmm$NEXT
-  HHEd -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Configs/HHEd.config Dictionary/phones.list
+  cp -r Models/hmm$ITERATION/* Models/hmm$NEXT
+
+  echo "~h \"sp\"" >> Models/hmm$NEXT/hmmdefs
+  echo "<BEGINHMM>" >> Models/hmm$NEXT/hmmdefs
+  echo "<NUMSTATES> 3" >> Models/hmm$NEXT/hmmdefs
+  echo "<STATE> 2" >> Models/hmm$NEXT/hmmdefs
+
+  sed -n '518,522p' < Models/hmm$NEXT/hmmdefs >> Models/hmm$NEXT/hmmdefs
+
+  echo "<TRANSP> 3" >> Models/hmm$NEXT/hmmdefs
+  echo " 0.0 1.0 0.0" >> Models/hmm$NEXT/hmmdefs
+  echo " 0.0 0.9 0.1" >> Models/hmm$NEXT/hmmdefs
+  echo " 0.0 0.0 0.0" >> Models/hmm$NEXT/hmmdefs
+  echo "<ENDHMM>" >> Models/hmm$NEXT/hmmdefs
+
+  echo "    >> Fix silence model $NEXT_NEXT"
+  mkdir Models/hmm$NEXT_NEXT
+  HHEd -H Models/hmm$NEXT/macros -H Models/hmm$NEXT/hmmdefs -M Models/hmm$NEXT_NEXT Configs/HHEd.config Dictionary/phones-with-sp.list
 }
 
 generate_hmmdefs() {
@@ -131,10 +149,6 @@ train() {
     estimate $i
   done
   fix_silence_model 3
-  for i in {4..6}
-  do
-    estimate $i
-  done
 }
 
 #================================
@@ -163,8 +177,6 @@ main() {
   clean
   data_prep
   train
-  testing 7
-  evaluate 7
 }
 
 main
