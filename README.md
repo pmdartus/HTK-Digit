@@ -22,3 +22,7 @@ cd /vagrant
 
 You can create a model and train it using the command `./start-htk`. The final model will be stored in the folder `Models/hmm15`
 The command will also output accuracy of the trainned model against the `dev` dataset.
+
+## Results
+
+Read the [report](REPORT.md)! ;)
