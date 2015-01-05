@@ -1,6 +1,6 @@
-**Note:** This document is divied into 2 parts: the report itself containning informations about the experimentation and also the a log part containg the HTK command used in order to train the model.
-
 # Report
+
+**Note:** This document is divied into 2 parts: the report itself containning informations about the experimentation and also the a log part containg the HTK command used in order to train the model.
 
 The main object objectif of the project is to build a digit recognation system based on HTK toolkit. We will use 2 datasets to train a model (`train`) and to evaluate his performance (`dev`).
 
@@ -41,6 +41,18 @@ Before jumping into the explaination of the experiment, it's important to unders
   ├ start-htk.sh                  # Script to execute trainning and testing
   └ Vagrantfile
 ```
+
+## Experiement approach
+
+Each step of the experiment are described  in the Log section of this document. For more details conserning the overall pipeline refer to the `start-htk.sh` script in the root dicrectory of the project.
+
+* In order to build the digit recognation system, we need first to **prepare the data** for both training and testing. We need first to create a grammar for the system, wich will represent the chain of a spoken digits beginning and ending with a silence `sil`. We will use also the [Voxforge dictionary](http://www.repository.voxforge1.org/downloads/SpeechCorpus/Trunk/Lexicon/VoxForge.tgz), this dictionnary will allow to create a list of monophones representing each digit. We will have also to extract the features of each recording from the `train`and `dev` datasets, using the `HCompV` command.
+
+* In a second time, we will train a **monophone** Hidden Markov Model. The model will be re-estimate after introducing short pauses into the transcription in order to increase it's accuracy. We will also use the `HVite` command to align the phones with the training data.
+
+* Finally, we will convert monophones into **triphones** to introduce context awareness into our existing model. By doing this, each monophones will be analysed in the context of the previous and the next one.
+
+Once the model is trained, it's possible to evaluate his preformance against the `dev` dataset.
 
 
 
