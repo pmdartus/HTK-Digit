@@ -20,8 +20,10 @@ cd /vagrant
 
 ## Usage
 
-You can create a model and train it using the command `./start-htk`. The final model will be stored in the folder `Models/hmm15`
+You can create a model and train it using the command `./start-htk.sh`. The final model will be stored in the folder `Models/hmm15`
 The command will also output accuracy of the trainned model against the `dev` dataset.
+
+You can specify the output file for logging the script by passing the name of the file: `./start-htk.sh cmd.log`. If not file is passed the command outputs will be redirected into `/dev/null`.
 
 ## Results
 
