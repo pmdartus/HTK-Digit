@@ -13,7 +13,7 @@ You are now ready to run Vagrant.
 
 ```
 vagrant up
-vagrant ss
+vagrant ssh
 cd /vagrant
 ```
 
