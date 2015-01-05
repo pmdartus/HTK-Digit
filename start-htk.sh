@@ -1,5 +1,8 @@
 #!/bin/bash
 
+DEFAULT_LOG=/dev/null
+LOG_FILE=${1:-$DEFAULT_LOG}
+
 PHONES_DICT="Dictionary/phones.dict"
 PHONE_LIST="Dictionary/phones.list"
 RECORDED_PATH="./Data/Recorded/"
@@ -30,6 +33,14 @@ clean() {
   rm -rf Mappings/*
   rm -rf Models/hmm*
   rm -rf Data/Lab/*
+  rm -f $LOG_FILE
+}
+
+log_cmd() {
+  read IN
+  $IN >> $LOG_FILE
+  echo "" >> $LOG_FILE
+  echo "" >> $LOG_FILE
 }
 
 #================================
@@ -51,7 +62,7 @@ generate_hcopy_mapping() {
 data_prep() {
   echo "DATA PREP"
   echo "    >> Grammar generation"
-  HDMan -m -w Dictionary/Src/word.list -n Dictionary/phones-with-sp.list -g ./Configs/global.ded -l dlog $PHONES_DICT Dictionary/Src/dict
+  HDMan -A -T 1 -m -w Dictionary/Src/word.list -n Dictionary/phones-with-sp.list -g ./Configs/global.ded -l dlog $PHONES_DICT Dictionary/Src/dict | log_cmd
   echo "sil" >> Dictionary/phones-with-sp.list
   sed '/sp/d' Dictionary/phones-with-sp.list > $PHONE_LIST
   echo "sil   sil" >> $PHONES_DICT
@@ -63,19 +74,19 @@ data_prep() {
   mv $TMP_DICT $PHONES_DICT
 
   # Create word net
-  HParse Dictionary/Src/grammar Dictionary/Src/grammar.wordnet
+  HParse -A -T 1 Dictionary/Src/grammar Dictionary/Src/grammar.wordnet | log_cmd
 
   # Convert to phones
-  HLEd -d $PHONES_DICT -i Labels/train.phones.mlf -l './Data/Lab/train' Configs/HLEd.config Labels/train.nosp.mlf
-  HLEd -d $PHONES_DICT -i Labels/train.phones-with-sp.mlf -l './Data/Lab/train' Configs/HLEd-with-sp.config Labels/train.nosp.mlf
+  HLEd -A -d $PHONES_DICT -i Labels/train.phones.mlf -l './Data/Lab/train' Configs/HLEd.config Labels/train.nosp.mlf | log_cmd
+  HLEd -A -d $PHONES_DICT -i Labels/train.phones-with-sp.mlf -l './Data/Lab/train' Configs/HLEd-with-sp.config Labels/train.nosp.mlf | log_cmd
 
   echo "    >> Features extraction"
   generate_hcopy_mapping train
-  HCopy -T 1 -C Configs/HCopy.config -S Mappings/HCopy_train.mapping > /dev/null
+  HCopy -A -D -C Configs/HCopy.config -S Mappings/HCopy_train.mapping | log_cmd
 
   echo "    >> Test preparation"
   generate_hcopy_mapping dev
-  HCopy -T 1 -C Configs/HCopy.config -S Mappings/HCopy_dev.mapping > /dev/null
+  HCopy -A -D -C Configs/HCopy.config -S Mappings/HCopy_dev.mapping | log_cmd
   create_mapping HVite "./Data/Lab/dev/*"
 }
 
@@ -93,8 +104,8 @@ estimate() {
 
   echo "    >> Estimate $NEXT"
   mkdir Models/hmm$NEXT
-  HERest -A -D -T 1 -C Configs/HERest.config -I Labels/$MLF -t 250.0 150.0 30000.0 $4 -S Mappings/HERest.mapping\
-       -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Dictionary/$LIST >> /dev/null
+  HERest -A -D -C Configs/HERest.config -I Labels/$MLF -t 250.0 150.0 30000.0 $4 -S Mappings/HERest.mapping\
+       -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -M Models/hmm$NEXT Dictionary/$LIST | log_cmd
 }
 
 fix_silence_model() {
@@ -121,7 +132,7 @@ fix_silence_model() {
 
   echo "    >> Fix silence model $NEXT_NEXT"
   mkdir Models/hmm$NEXT_NEXT
-  HHEd -H Models/hmm$NEXT/macros -H Models/hmm$NEXT/hmmdefs -M Models/hmm$NEXT_NEXT Configs/HHEd.config Dictionary/phones-with-sp.list
+  HHEd -A -H Models/hmm$NEXT/macros -H Models/hmm$NEXT/hmmdefs -M Models/hmm$NEXT_NEXT Configs/HHEd.config Dictionary/phones-with-sp.list | log_cmd
 }
 
 align() {
@@ -129,8 +140,8 @@ align() {
 
   echo "    >> Aligning MLF"
   create_mapping HVite_align "./Data/Lab/train/*"
-  HVite -A -D -T 1 -l './Data/Lab/train' -b sil -o SWT -C Configs/HVite.config -H Models/hmm$IT/macros -H Models/hmm$IT/hmmdefs\
-      -i Labels/aligned.mlf -m -t 250.0 150.0 1000.0 -y lab -a -I Labels/train.nosp.mlf -S Mappings/HVite_align.mapping $PHONES_DICT Dictionary/phones-with-sp.list> HVite_log
+  HVite -A -D -l './Data/Lab/train' -b sil -o SWT -C Configs/HVite.config -H Models/hmm$IT/macros -H Models/hmm$IT/hmmdefs\
+      -i Labels/aligned.mlf -m -t 250.0 150.0 1000.0 -y lab -a -I Labels/train.nosp.mlf -S Mappings/HVite_align.mapping $PHONES_DICT Dictionary/phones-with-sp.list | log_cmd
 }
 
 generate_hmmdefs() {
@@ -149,17 +160,17 @@ generate_macros() {
 
 triphone() {
   echo "    >> Triphones"
-  HLEd -A -D -T 1 -n Dictionary/triphones.list -l "./Data/Lab/train" -i Labels/triphones.mlf Configs/HLEd-triphone.config Labels/aligned.mlf >> /dev/null
+  HLEd -A -D -n Dictionary/triphones.list -l "./Data/Lab/train" -i Labels/triphones.mlf Configs/HLEd-triphone.config Labels/aligned.mlf | log_cmd
   perl ./HTK_scripts/maketrihed Dictionary/phones-with-sp.list Dictionary/triphones.list
 
   mkdir Models/hmm10
-  HHEd -H Models/hmm9/macros -H Models/hmm9/hmmdefs -M Models/hmm10 mktri.hed Dictionary/phones-with-sp.list
+  HHEd -A -H Models/hmm9/macros -H Models/hmm9/hmmdefs -M Models/hmm10 mktri.hed Dictionary/phones-with-sp.list | log_cmd
 }
 
 make_tied_state() {
   echo "    >> Make tied state"
   grep -v "[bdglmpy]\|ao\|aa\|ae\|aw\|ax\|ch\|en\|er\|hh\|jh\|sh\|uh\|zh" Dictionary/Src/dict > Dictionary/Src/dict_fixed
-  HDMan -b sp -n Dictionary/fulllist.list -g Config/global.ded -l flog Dictionary/tri.dict Dictionary/Src/dict_fixed
+  HDMan -A -D -b sp -n Dictionary/fulllist.list -g Config/global.ded -l flog Dictionary/tri.dict Dictionary/Src/dict_fixed | log_cmd
 
   cp Dictionary/fulllist.list Dictionary/fulllist1.list
   cat Dictionary/triphones.list >> Dictionary/fulllist1.list
@@ -180,7 +191,7 @@ make_tied_state() {
   echo "ST \"trees\"" >> Configs/tree.hed
 
   mkdir Models/hmm13
-  HHEd -H Models/hmm12/macros -H Models/hmm12/hmmdefs -M Models/hmm13 Configs/tree.hed Dictionary/triphones.list >> /dev/null
+  HHEd -A -H Models/hmm12/macros -H Models/hmm12/hmmdefs -M Models/hmm13 Configs/tree.hed Dictionary/triphones.list | log_cmd
 }
 
 train() {
@@ -188,7 +199,7 @@ train() {
   echo "    >> Init"
   mkdir Models/hmm0
   create_mapping HCompV "./Data/Lab/train/*"
-  HCompV -C Configs/HCompV.config -f 0.01 -m -S Mappings/HCompV.mapping -M Models/hmm0 Models/prototype
+  HCompV -A -D -C Configs/HCompV.config -f 0.01 -m -S Mappings/HCompV.mapping -M Models/hmm0 Models/prototype | log_cmd
 
   generate_hmmdefs
   generate_macros
@@ -228,8 +239,8 @@ testing() {
   echo "TESTING"
   echo "    >> With model $ITERATION"
 
-  HVite -A -D -T 1 -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -S Mappings/HVite.mapping -i Labels/aligned_$ITERATION.mlf \
-      -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT Dictionary/tiedlist.list >> /dev/null
+  HVite -A -D -H Models/hmm$ITERATION/macros -H Models/hmm$ITERATION/hmmdefs -S Mappings/HVite.mapping -i Labels/aligned_$ITERATION.mlf \
+      -w Dictionary/Src/grammar.wordnet -p 0.0 -s 5.0 $PHONES_DICT Dictionary/tiedlist.list | log_cmd
 }
 
 #================================
@@ -237,7 +248,7 @@ testing() {
 #================================
 
 evaluate() {
-  HResults -f -I Labels/dev.ref.mlf Dictionary/tiedlist.list Labels/aligned_15.mlf
+  HResults -I Labels/dev.ref.mlf Dictionary/tiedlist.list Labels/aligned_15.mlf
 }
 
 
