@@ -13,7 +13,7 @@ Mappings
 Labels/train.phones.mlf
 Labels/aligned*
 Labels/triphones.mlf
-Dictionary/phones.*
+Dictionary/phones*
 Dictionary/triphones.list
 Dictionary/Src/dict_fixed
 Dictionary/fulllist.list
